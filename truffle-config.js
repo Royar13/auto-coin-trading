@@ -62,9 +62,14 @@ module.exports = {
         kovan: {
             provider: () => new HDWalletProvider({
                 privateKeys: [privateKey],
-                providerOrUrl: "https://kovan.infura.io/v3/" + process.env.INFURA_PROJECT_ID
+                providerOrUrl: "wss://kovan.infura.io/ws/v3/" + process.env.INFURA_PROJECT_ID
             }),
-            network_id: "42"
+            network_id: "42",
+            // gas: 5500000,        // kovan has a lower block limit than mainnet
+            // confirmations: 2,    // # of confs to wait between deployments. (default: 0)
+            // timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
+            // skipDryRun: true,     // Skip dry run before migrations? (default: false for public nets )
+            networkCheckTimeout: 10000
         }
         // Useful for private networks
         // private: {

@@ -7,7 +7,7 @@ import "@uniswap/v2-periphery/contracts/UniswapV2Router02.sol";
 
 contract AutoCoinTrader {
 
-    function trade(address uniswapRouterAddr) internal view returns (uint256[] memory amounts) {
+    function trade(address uniswapRouterAddr, uint amountOut) public view returns (uint[] memory amounts) {
         // IUniswapV2Pair pair =
         //     IUniswapV2Pair(
         //         UniswapV2Library.pairFor(
@@ -19,8 +19,8 @@ contract AutoCoinTrader {
         IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(uniswapRouterAddr);
 
         address[] memory path = new address[](2);
-        path[0] = address(0xf92b8cD34853D91425F79Fce8c438366443FFcD7);
+        path[0] = address(0xEa14a7826078Bed4Fe9F41EC322A802f169B98b9);
         path[1] = uniswapRouter.WETH();
-        return uniswapRouter.getAmountsIn(10, path);
+        return uniswapRouter.getAmountsIn(amountOut, path);
     }
 }
