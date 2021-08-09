@@ -3,36 +3,48 @@ var axios = require('axios')
 
 let coins = [
     {
-        name: 'Bitcoin',
-        unit: 'BTC',
-        address: '',
+        name: 'Etherium',
+        unit: 'WETH',
+        address: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
         value: 1
     },
     {
-        name: 'DAI',
-        unit: 'DAI',
-        address: '',
-        value: 1.2
+        name: 'NewSampleToken',
+        unit: 'NTOK',
+        address: '0xEa14a7826078Bed4Fe9F41EC322A802f169B98b9',
+        value: 4.81939
     },
     {
-        name: 'Satoshi',
-        unit: 'STH',
-        address: '',
+        name: 'MichalToken',
+        unit: 'MST',
+        address: '0x0E9999fbe2fe4f93A9f3B2E094d5b49222754114',
         value: 1.2
     }
+]
+
+let cryptoExchangeMat = [
+    [1, 4.81939, 1 / 5],
+    [1 / 4.81939, 1, 5],
+    [5, 1 / 5, 1]
 ]
 
 module.exports = {
     getExchangePath: function () {
         return axios.get('https://api.coingecko.com/api/v3/exchange_rates').then(res => {
-            let rates = res.data.rates
-            let cryptoCoins = Object.values(rates).filter(c => c.type === 'crypto')
-            let exchangeMat = buildExchangeMat(cryptoCoins)
-            return arbitrage(exchangeMat, 0, cryptoCoins)
+            // let rates = res.data.rates
+            // let cryptoCoins = Object.values(rates).filter(c => c.type === 'crypto')
+            let exchangeMat = applyLogMat(cryptoExchangeMat)
+            return arbitrage(exchangeMat, 0, coins)
         }).catch(err => {
             console.error('Error: ' + err.message)
             throw err
         })
+    },
+    getExchangeRate: function (coinA, coinB) {
+        return cryptoExchangeMat[coinA][coinB]
+    },
+    getCoin: function (index) {
+        return coins[index]
     }
 }
 
@@ -42,7 +54,6 @@ function buildExchangeMat(cryptoCoins) {
 
     for (let i = 0; i < cryptoCoins.length; i++) {
         let coin = cryptoCoins[i]
-        coins.push(coin)
         exchangeMatOrig[i] = []
         exchangeMat[i] = []
         for (let j = 0; j < cryptoCoins.length; j++) {
@@ -56,6 +67,18 @@ function buildExchangeMat(cryptoCoins) {
         //console.log(exchangeMat[i].join(','))
     }
     return exchangeMat
+}
+
+function applyLogMat(exchangeMat) {
+    exchangeMatLog = []
+    for (let i = 0; i < exchangeMat.length; i++) {
+        exchangeMatLog[i] = []
+        for (let j = 0; j < exchangeMat.length; j++) {
+            //todo: fix
+            exchangeMatLog[i][j] = -Math.log(1 / exchangeMat[i][j])
+        }
+    }
+    return exchangeMatLog
 }
 
 function arbitrage(exchangeMat, source, coins) {
