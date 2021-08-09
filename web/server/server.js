@@ -3,7 +3,7 @@ var fs = require('fs')
 const path = require("path")
 const Web3 = require('web3')
 const rpcURL = "https://kovan.infura.io/v3/80acc13fcbcf4fe6a380a05c3231772e"
-
+var arbitrage = require('./find_arbitrage')
 
 var web3 = new Web3(new Web3.providers.WebsocketProvider("wss://kovan.infura.io/ws/v3/80acc13fcbcf4fe6a380a05c3231772e"));
 
@@ -16,12 +16,17 @@ var parsed = JSON.parse(fs.readFileSync(jsonPathRouter))
 var abiRouter = parsed.abi
 
 var uniswapRouterAddr = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-var autoCoinTraderAddr = "0x8A3119421746d00D50C352e9C8AAd96cf2c7b3Ed"
+var autoCoinTraderAddr = "0xD54180624c44E9Becf85BCD8031BAE6224e50e32"
 var autoCoinTrader = new web3.eth.Contract(abi, autoCoinTraderAddr)
 var uniswapRouter = new web3.eth.Contract(abiRouter, uniswapRouterAddr)
-autoCoinTrader.methods.trade(uniswapRouterAddr).call((err, result) => {
-    console.log(result)
+// autoCoinTrader.methods.trade(uniswapRouterAddr, 100000000000).call((err, result) => {
+//     console.log(result)
+// })
+
+arbitrage.getExchangePath().then(cycles => {
+    console.log(cycles)
 })
+
 // uniswapRouter.methods.WETH().call((err, result) => {
 //     console.log(result)
 // })

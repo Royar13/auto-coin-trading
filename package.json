@@ -10,6 +10,7 @@
     "@truffle/hdwallet-provider": "^1.4.1",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
+    "axios": "^0.21.1",
     "dotenv": "^10.0.0",
     "truffle": "^5.3.14",
     "web3": "^1.4.0"
