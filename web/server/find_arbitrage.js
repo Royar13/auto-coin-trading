@@ -1,5 +1,13 @@
-var http = require('http')
 var axios = require('axios')
+const Web3 = require('web3');
+const path = require("path");
+const fs = require("fs");
+const web3 = new Web3(new Web3.providers.WebsocketProvider("wss://kovan.infura.io/ws/v3/80acc13fcbcf4fe6a380a05c3231772e"));
+
+const uniswapRouterAddr = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+const uniswapRouterJsonPath = path.resolve(process.cwd(), "build/contracts/UniswapV2Router02.json");
+const uniswapRouterJson = JSON.parse(fs.readFileSync(uniswapRouterJsonPath));
+const uniswapRouterAbi = uniswapRouterJson.abi;
 
 let coins = [
     {
@@ -28,6 +36,8 @@ let cryptoExchangeMat = [
     [5, 1 / 5, 1]
 ]
 
+exchangeRateForCoins();
+
 module.exports = {
     getExchangePath: function () {
         return axios.get('https://api.coingecko.com/api/v3/exchange_rates').then(res => {
@@ -43,9 +53,11 @@ module.exports = {
     getExchangeRate: function (coinA, coinB) {
         return cryptoExchangeMat[coinA][coinB]
     },
-    getCoin: function (index) {
-        return coins[index]
-    }
+    getCoin: getCoin
+}
+
+function getCoin(index) {
+    return coins[index];
 }
 
 function buildExchangeMat(cryptoCoins) {
@@ -67,6 +79,33 @@ function buildExchangeMat(cryptoCoins) {
         //console.log(exchangeMat[i].join(','))
     }
     return exchangeMat
+}
+
+async function fetchUniswapExchangeRates(tokenA, tokenB) {
+    const uniswapRouter = new web3.eth.Contract(uniswapRouterAbi, uniswapRouterAddr);
+    await uniswapRouter.methods.getAmountsOut(1.0, [tokenA, tokenB]).call()
+}
+
+async function exchangeRateForCoins() {
+    let ratesMat = []
+    let rate
+    for (let i = 0; i < coins.length - 2; i++) {
+        ratesMat.push([])
+        for (let j = i + 1; j < coins.length - 1; j++) {
+            rate = await fetchUniswapExchangeRates(coins[i].address, coins[j].address)
+            ratesMat[i][j] = rate
+        }
+    }
+    for (let i = 0; i < coins.length - 2; i++) {
+        for (let j = i; j < coins.length - 1; j++) {
+            if (i === j) {
+                ratesMat[i][j] = 1
+            }
+            ratesMat[j][i] = 1 / ratesMat[i][j]
+        }
+    }
+    console.log(ratesMat)
+    return ratesMat
 }
 
 function applyLogMat(exchangeMat) {
