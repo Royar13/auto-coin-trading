@@ -19,7 +19,7 @@ const uniswapRouterJson = JSON.parse(fs.readFileSync(uniswapRouterJsonPath));
 const uniswapRouterAbi = uniswapRouterJson.abi;
 
 const uniswapRouterAddr = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-const autoCoinTraderAddr = "0x388eB78e0ccC22A705F8d05917a5767b1f9901A9";
+const autoCoinTraderAddr = "0x07A6601051d78734c4ef11a7EeB84247F6aa1B4F";
 const autoCoinTrader = new web3.eth.Contract(autoCoinTraderAbi, autoCoinTraderAddr);
 const uniswapRouter = new web3.eth.Contract(uniswapRouterAbi, uniswapRouterAddr);
 // autoCoinTrader.methods.trade(uniswapRouterAddr, 100000000000).call((err, result) => {
@@ -32,55 +32,70 @@ arbitrage.getExchangePath().then(async cycles => {
     let amountIn;
     const gas = 2000000;
 
-    let initialCoin = arbitrage.getCoin(cycle[0]);
-    const tokenContract = new web3.eth.Contract(ERC20Abi, initialCoin.address);
-    const balance = await tokenContract.methods.balanceOf(ourAddr).call();
-    amountIn = Math.round(balance / 20000000);
+    let initialToken = arbitrage.getCoin(cycle[0]);
+    const tokenContract = new web3.eth.Contract(ERC20Abi, initialToken.address);
+    const initialTokenBalance = await tokenContract.methods.balanceOf(ourAddr).call();
+    amountIn = Math.round(initialTokenBalance / 20000000);
     // transfer autoCoinTrader the initial amountIn of the token
     let transferMethod = tokenContract.methods.transfer(autoCoinTraderAddr, amountIn);
     let transferEncodedAbi = transferMethod.encodeABI();
     let transferTx = {
         from: ourAddr,
-        to: initialCoin.address,
+        to: initialToken.address,
         gas: gas,
         data: transferEncodedAbi
     };
 
-    web3.eth.accounts.signTransaction(transferTx, privateKey).then(signed => {
-        let tran = web3.eth.sendSignedTransaction(signed.rawTransaction);
+    let signedTokenTransferTrans = await web3.eth.accounts.signTransaction(transferTx, privateKey);
 
-        tran.on('receipt', receipt => {
-            console.log('reciept:');
-            console.log(receipt);
+    let tokenTransferReceipt = await web3.eth.sendSignedTransaction(signedTokenTransferTrans.rawTransaction);
 
-            for (let i = 0; i < cycle.length - 2; i++) {
-                let coinA = arbitrage.getCoin(cycle[i]);
-                let coinB = arbitrage.getCoin(cycle[i + 1]);
+    console.log('Token transfer reciept:');
+    console.log(tokenTransferReceipt);
 
-                let amountOutMin = Math.floor(amountIn * arbitrage.getExchangeRate(cycle[i], cycle[i + 1]) * 0.9);
-                let tradeMethod = autoCoinTrader.methods.trade(uniswapRouterAddr, coinA.address, coinB.address, amountIn, amountOutMin);
-                let tradeEncodedAbi = tradeMethod.encodeABI();
-                let tradeTx = {
-                    from: ourAddr,
-                    to: autoCoinTraderAddr,
-                    gas: gas,
-                    data: tradeEncodedAbi
-                };
+    for (let i = 0; i < cycle.length - 1; i++) {
+        console.log('Amount in: ' + amountIn);
+        let tokenA = arbitrage.getCoin(cycle[i]);
+        let tokenB = arbitrage.getCoin(cycle[i + 1]);
+        const contractTokenB = new web3.eth.Contract(ERC20Abi, tokenB.address);
+        let balanceTokenB = await contractTokenB.methods.balanceOf(autoCoinTraderAddr).call();
 
-                web3.eth.accounts.signTransaction(tradeTx, privateKey).then(signed => {
-                    let tran = web3.eth.sendSignedTransaction(signed.rawTransaction);
+        let amountOutMin = Math.floor(amountIn * arbitrage.getExchangeRate(cycle[i], cycle[i + 1]) * 0.9);
+        let tradeMethod = autoCoinTrader.methods.trade(uniswapRouterAddr, tokenA.address, tokenB.address, amountIn, amountOutMin);
+        let tradeEncodedAbi = tradeMethod.encodeABI();
+        let tradeTx = {
+            from: ourAddr,
+            to: autoCoinTraderAddr,
+            gas: gas,
+            data: tradeEncodedAbi
+        };
 
-                    tran.on('receipt', receipt => {
-                        console.log('reciept:');
-                        console.log(receipt);
-                    });
+        let signedTradeTrans = await web3.eth.accounts.signTransaction(tradeTx, privateKey);
+        let tradeReceipt = await web3.eth.sendSignedTransaction(signedTradeTrans.rawTransaction);
 
-                    tran.on('error', console.error);
-                });
-                break;
-            }
-        });
+        console.log('Trade reciept:');
+        console.log(tradeReceipt);
+        // the difference in balance is the amountOut received from the swap
+        let newBalanceTokenB = await contractTokenB.methods.balanceOf(autoCoinTraderAddr).call();
+        amountIn = newBalanceTokenB - balanceTokenB;
+    }
+    //collect the last token of the trade chain into our account
+    let lastToken = arbitrage.getCoin(cycle[cycle.length - 1])
+    let collectTokenMethod = autoCoinTrader.methods.collectToken(lastToken.address);
+    let collectTokenEncodedAbi = collectTokenMethod.encodeABI();
+    let collectTokenTx = {
+        from: ourAddr,
+        to: autoCoinTraderAddr,
+        gas: gas,
+        data: collectTokenEncodedAbi
+    };
 
-        tran.on('error', console.error);
-    });
+    let signedCollectTokenTrans = await web3.eth.accounts.signTransaction(collectTokenTx, privateKey);
+    let collectTokenReceipt = await web3.eth.sendSignedTransaction(signedCollectTokenTrans.rawTransaction);
+    console.log('Collect token reciept:');
+    console.log(collectTokenReceipt);
+
+    const finishedTokenBalance = await tokenContract.methods.balanceOf(ourAddr).call();
+    const profit = finishedTokenBalance - initialTokenBalance
+    console.log('Our profit: ' + profit + ' ' + initialToken.unit)
 })
