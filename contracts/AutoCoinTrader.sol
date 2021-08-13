@@ -8,7 +8,9 @@ import "@uniswap/v2-periphery/contracts/UniswapV2Router02.sol";
 contract AutoCoinTrader {
 
     function trade(address uniswapRouterAddr, address coinIn, address coinOut, uint amountIn, uint amountOutMin) public payable returns (uint[] memory amounts){
-        require(DAI.approve(uniswapRouterAddr, amountIn), 'approve failed.');
+        (bool success, bytes memory returnData) = coinIn.call(abi.encodeWithSignature("approve(address,uint256)", uniswapRouterAddr, amountIn));
+        require(success);
+
         address[] memory path = new address[](2);
         path[0] = coinIn;
         path[1] = coinOut;
