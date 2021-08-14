@@ -14,17 +14,9 @@ const autoCoinTraderJsonPath = path.resolve(process.cwd(), "build/contracts/Auto
 const autoCoinTraderJson = JSON.parse(fs.readFileSync(autoCoinTraderJsonPath));
 const autoCoinTraderAbi = autoCoinTraderJson.abi;
 
-const uniswapRouterJsonPath = path.resolve(process.cwd(), "build/contracts/UniswapV2Router02.json");
-const uniswapRouterJson = JSON.parse(fs.readFileSync(uniswapRouterJsonPath));
-const uniswapRouterAbi = uniswapRouterJson.abi;
-
 const uniswapRouterAddr = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 const autoCoinTraderAddr = "0x07A6601051d78734c4ef11a7EeB84247F6aa1B4F";
 const autoCoinTrader = new web3.eth.Contract(autoCoinTraderAbi, autoCoinTraderAddr);
-const uniswapRouter = new web3.eth.Contract(uniswapRouterAbi, uniswapRouterAddr);
-// autoCoinTrader.methods.trade(uniswapRouterAddr, 100000000000).call((err, result) => {
-//     console.log(result)
-// })
 
 
 arbitrage.getExchangePath().then(async cycles => {
@@ -58,7 +50,7 @@ arbitrage.getExchangePath().then(async cycles => {
         let tokenA = arbitrage.getCoin(cycle[i]);
         let tokenB = arbitrage.getCoin(cycle[i + 1]);
         const contractTokenB = new web3.eth.Contract(ERC20Abi, tokenB.address);
-        let balanceTokenB = await contractTokenB.methods.balanceOf(autoCoinTraderAddr).call();
+        let balanceTokenB = parseInt(await contractTokenB.methods.balanceOf(autoCoinTraderAddr).call());
 
         let amountOutMin = Math.floor(amountIn * arbitrage.getExchangeRate(cycle[i], cycle[i + 1]) * 0.9);
         let tradeMethod = autoCoinTrader.methods.trade(uniswapRouterAddr, tokenA.address, tokenB.address, amountIn, amountOutMin);
@@ -76,7 +68,7 @@ arbitrage.getExchangePath().then(async cycles => {
         console.log('Trade reciept:');
         console.log(tradeReceipt);
         // the difference in balance is the amountOut received from the swap
-        let newBalanceTokenB = await contractTokenB.methods.balanceOf(autoCoinTraderAddr).call();
+        let newBalanceTokenB = parseInt(await contractTokenB.methods.balanceOf(autoCoinTraderAddr).call());
         amountIn = newBalanceTokenB - balanceTokenB;
     }
     //collect the last token of the trade chain into our account

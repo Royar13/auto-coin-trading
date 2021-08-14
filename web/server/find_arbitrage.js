@@ -8,6 +8,7 @@ const uniswapRouterAddr = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 const uniswapRouterJsonPath = path.resolve(process.cwd(), 'build/contracts/UniswapV2Router02.json');
 const uniswapRouterJson = JSON.parse(fs.readFileSync(uniswapRouterJsonPath));
 const uniswapRouterAbi = uniswapRouterJson.abi;
+const uniswapRouter = new web3.eth.Contract(uniswapRouterAbi, uniswapRouterAddr);
 
 let coins = [
     {
@@ -27,29 +28,21 @@ let coins = [
     }
 ]
 
-let cryptoExchangeMat = [
-    [1, 4.81939, 1 / 5],
-    [1 / 4.81939, 1, 5],
-    [5, 1 / 5, 1]
-]
 
-createExchangeRatesMat();
+let exchangeRatesMat = null;
+let logExchangeRatesMat = null;
 
 
 module.exports = {
-    getExchangePath: function () {
-        return axios.get('https://api.coingecko.com/api/v3/exchange_rates').then(res => {
-            // let rates = res.data.rates
-            // let cryptoCoins = Object.values(rates).filter(c => c.type === 'crypto')
-            let exchangeMat = applyLogMat(cryptoExchangeMat)
-            return arbitrage(exchangeMat, 0, coins)
-        }).catch(err => {
-            console.error('Error: ' + err.message)
-            throw err
-        })
+    getExchangePath: async function () {
+        if (!exchangeRatesMat) {
+            exchangeRatesMat = await createExchangeRatesMat();
+            logExchangeRatesMat = applyLogMat(exchangeRatesMat);
+        }
+        return arbitrage(logExchangeRatesMat, 0, coins);
     },
     getExchangeRate: function (coinA, coinB) {
-        return cryptoExchangeMat[coinA][coinB]
+        return exchangeRatesMat[coinA][coinB]
     },
     getCoin: getCoin
 }
@@ -59,10 +52,10 @@ function getCoin(index) {
 }
 
 async function fetchUniswapExchangeRate(tokenA, tokenB) {
-    const uniswapRouter = new web3.eth.Contract(uniswapRouterAbi, uniswapRouterAddr);
-    let one = web3.utils.toWei('1', 'ether');
+    // a value lower than 1 is used to avoid too big of an impact on the liquidity pool
+    let one = web3.utils.toWei('0.0001');
     let amountsOut = await uniswapRouter.methods.getAmountsOut(one, [tokenA, tokenB]).call();
-    return parseFloat(web3.utils.fromWei(amountsOut[1], 'ether'));
+    return parseInt(amountsOut[1]) / one;
 }
 
 async function createExchangeRatesMat() {
@@ -90,8 +83,7 @@ function applyLogMat(exchangeMat) {
     for (let i = 0; i < exchangeMat.length; i++) {
         exchangeMatLog[i] = []
         for (let j = 0; j < exchangeMat.length; j++) {
-            //todo: fix
-            exchangeMatLog[i][j] = -Math.log(1 / exchangeMat[i][j]);
+            exchangeMatLog[i][j] = -Math.log(exchangeMat[i][j]);
         }
     }
     return exchangeMatLog
@@ -120,38 +112,31 @@ function arbitrage(exchangeMat, source, coins) {
     }
 
     //epsilon = 0.000000000000001
-    let epsilon = 0
-    let cycles = []
+    let epsilon = 0;
+    let cycles = [];
     for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
             if (minDist[i] + exchangeMat[i][j] < minDist[j] - epsilon) {
                 // negative cycle exists, and use the predecessor chain to print the cycle
-                var cycle = getCycle(pre, i, j, coins)
-                if (cycle) {
-                    cycles.push(cycle)
-                }
+                let cycle = getCycle(pre, i);
+                console.log(cycle.map(c => coins[c].name).join('-->'))
+                cycles.push(cycle);
             }
         }
     }
-    console.log('Done')
-    return cycles
+    console.log('Done');
+    return cycles;
 }
 
-function getCycle(pre, source, dest, coins) {
-    let cycle = [dest, source]
-    let con = true
-    let currCoin = source
-    while (con) {
-        cycle.push(pre[currCoin])
-        currCoin = pre[currCoin]
-        con = !cycle.some(c => c === pre[currCoin])
+function getCycle(pre, source) {
+    let cycle = [source];
+    let currCoin = source;
+    let index = -1;
+    while (index < 0) {
+        currCoin = pre[currCoin];
+        index = cycle.findIndex(c => c === currCoin);
+        cycle.unshift(currCoin);
     }
-    cycle.push(pre[currCoin])
-
-    if (cycle[0] === cycle[cycle.length - 1]) {
-        console.log(cycle.map(c => coins[c].name).join('-->'))
-        return cycle
-    } else {
-        return null
-    }
+    cycle = cycle.slice(0, index + 2);
+    return cycle;
 }
