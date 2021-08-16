@@ -7,7 +7,7 @@ const web3 = new Web3(new Web3.providers.WebsocketProvider("wss://kovan.infura.i
 
 const ERC20JsonPath = path.resolve(process.cwd(), "node_modules/@openzeppelin/contracts/build/contracts/ERC20.json");
 const ERC20Json = JSON.parse(fs.readFileSync(ERC20JsonPath));
-const ERC20Abi = ERC20Json.abi
+const ERC20Abi = ERC20Json.abi;
 const ourAddr = "0x85fF53E32FcCDA712e4A9AF650E5e3868AF34ae3";
 
 const autoCoinTraderJsonPath = path.resolve(process.cwd(), "build/contracts/AutoCoinTrader.json");

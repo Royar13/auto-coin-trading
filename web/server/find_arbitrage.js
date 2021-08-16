@@ -1,4 +1,3 @@
-const axios = require('axios')
 const Web3 = require('web3');
 const path = require('path');
 const fs = require('fs');
@@ -34,13 +33,7 @@ let logExchangeRatesMat = null;
 
 
 module.exports = {
-    getExchangePath: async function () {
-        if (!exchangeRatesMat) {
-            exchangeRatesMat = await createExchangeRatesMat();
-            logExchangeRatesMat = applyLogMat(exchangeRatesMat);
-        }
-        return arbitrage(logExchangeRatesMat, 0, coins);
-    },
+    getExchangePath: getExchangePath,
     getExchangeRate: function (coinA, coinB) {
         return exchangeRatesMat[coinA][coinB]
     },
@@ -51,6 +44,14 @@ function getCoin(index) {
     return coins[index];
 }
 
+async function getExchangePath() {
+    if (!exchangeRatesMat) {
+        exchangeRatesMat = await createExchangeRatesMat();
+        logExchangeRatesMat = applyLogMat(exchangeRatesMat);
+    }
+    return arbitrage(logExchangeRatesMat, 0, coins);
+}
+
 async function fetchUniswapExchangeRate(tokenA, tokenB) {
     // a value lower than 1 is used to avoid too big of an impact on the liquidity pool
     let one = web3.utils.toWei('0.0001');
@@ -59,7 +60,7 @@ async function fetchUniswapExchangeRate(tokenA, tokenB) {
 }
 
 async function createExchangeRatesMat() {
-    let ratesMat = []
+    let ratesMat = [];
     //initialize 2-dimensional array
     for (let i = 0; i < coins.length; i++) {
         ratesMat[i] = [];
@@ -90,22 +91,22 @@ function applyLogMat(exchangeMat) {
 }
 
 function arbitrage(exchangeMat, source, coins) {
-    let n = exchangeMat.length
-    let minDist = []
-    let pre = []
+    let n = exchangeMat.length;
+    let minDist = [];
+    let pre = [];
     for (let i = 0; i < n; i++) {
         // null signifies "Infinity"
-        minDist.push(null)
-        pre.push(null)
+        minDist.push(null);
+        pre.push(null);
     }
-    minDist[source] = 0
+    minDist[source] = 0;
 
     for (let iter = 0; iter < n - 1; iter++) {
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {
                 if (minDist[i] !== null && (minDist[j] == null || minDist[i] + exchangeMat[i][j] < minDist[j])) {
-                    minDist[j] = minDist[i] + exchangeMat[i][j]
-                    pre[j] = i
+                    minDist[j] = minDist[i] + exchangeMat[i][j];
+                    pre[j] = i;
                 }
             }
         }
@@ -119,12 +120,11 @@ function arbitrage(exchangeMat, source, coins) {
             if (minDist[i] + exchangeMat[i][j] < minDist[j] - epsilon) {
                 // negative cycle exists, and use the predecessor chain to print the cycle
                 let cycle = getCycle(pre, i);
-                console.log(cycle.map(c => coins[c].name).join('-->'))
+                console.log(cycle.map(c => coins[c].name).join('-->'));
                 cycles.push(cycle);
             }
         }
     }
-    console.log('Done');
     return cycles;
 }
 
