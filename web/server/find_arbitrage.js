@@ -8,7 +8,7 @@ module.exports = {
     getExchangeRate: function (tokenA, tokenB) {
         return exchangeRatesMat[tokenA][tokenB];
     }
-}
+};
 
 async function getExchangePath(tokens) {
     if (!exchangeRatesMat) {

@@ -11,6 +11,10 @@ arbitrage.getExchangePath(conf.tokens).then(async cycles => {
     const tokenContract = new conf.web3.eth.Contract(conf.ERC20Abi, initialToken.address);
     const initialTokenBalance = await tokenContract.methods.balanceOf(conf.defaultAccount()).call();
     amountIn = Math.round(initialTokenBalance / 20000000);
+
+    let expectedProfit = await simulateCycleExchange(cycle, amountIn);
+    console.log('Expected profit: ' + expectedProfit);
+
     // transfer autoCoinTrader the initial amountIn of the token
     let transferMethod = tokenContract.methods.transfer(conf.autoCoinTrader._address, amountIn);
     let transferEncodedAbi = transferMethod.encodeABI();
@@ -76,11 +80,18 @@ arbitrage.getExchangePath(conf.tokens).then(async cycles => {
 });
 
 /**
- * Test how much profit would be earned by executing an arbitrage exchange cycle
+ * Calculate how much profit would be earned by executing an arbitrage exchange cycle
+ * (not including gas price)
  */
-function simulateCycleExchange(cycle) {
+async function simulateCycleExchange(cycle, initialAmount) {
+    let amountIn = initialAmount;
     for (let i = 0; i < cycle.length - 1; i++) {
         let tokenA = conf.tokens[cycle[i]];
         let tokenB = conf.tokens[cycle[i + 1]];
+        let path = [tokenA.address, tokenB.address];
+        let amounts = await conf.uniswapRouter.methods.getAmountsOut(amountIn, path).call();
+        amountIn = parseInt(amounts[1]);
     }
+    let profit = amountIn - initialAmount;
+    return profit;
 }
