@@ -1,4 +1,4 @@
-const conf = require('./configuration')
+const conf = require('./configuration');
 
 let exchangeRatesMat = null;
 let logExchangeRatesMat = null;
@@ -30,8 +30,8 @@ async function getExchangePath(tokens) {
 
 async function fetchUniswapExchangeRate(tokenA, tokenB) {
     // a value lower than 1 is used to avoid too big of an impact on the liquidity pool
-    let one = conf.web3.utils.toWei('0.0001');
-    let amountsOut = await conf.uniswapRouter.methods.getAmountsOut(one, [tokenA, tokenB]).call();
+    let one = conf.web3().utils.toWei('0.0001');
+    let amountsOut = await conf.uniswapRouter().methods.getAmountsOut(one, [tokenA, tokenB]).call();
     return parseInt(amountsOut[1]) / one;
 }
 

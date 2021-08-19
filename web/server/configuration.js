@@ -1,33 +1,42 @@
 const fs = require('fs');
 const Web3 = require('web3');
 
-const configJson = JSON.parse(fs.readFileSync('web/server/configuration.json'));
+let configJson = JSON.parse(fs.readFileSync('web/server/configuration.json'));
 
 const privateKey = process.argv[1];
-const web3 = new Web3(new Web3.providers.WebsocketProvider(configJson['InfuraUrl']));
-web3.eth.defaultAccount = configJson['DefaultAccountAddr'];
+let web3;
 const ERC20Json = JSON.parse(fs.readFileSync('node_modules/@openzeppelin/contracts/build/contracts/ERC20.json'));
 const ERC20Abi = ERC20Json.abi;
+let autoCoinTrader;
+let uniswapRouter;
+let tokens;
+reload();
 
-const autoCoinTraderJson = JSON.parse(fs.readFileSync('build/contracts/AutoCoinTrader.json'));
-const autoCoinTraderAbi = autoCoinTraderJson.abi;
+function reload() {
+    configJson = JSON.parse(fs.readFileSync('web/server/configuration.json'));
+    web3 = new Web3(new Web3.providers.WebsocketProvider(configJson['InfuraUrl']));
+    web3.eth.defaultAccount = configJson['DefaultAccountAddr'];
 
-const uniswapRouterAddr = configJson['UniswapRouterAddr'];
-const autoCoinTraderAddr = configJson['AutoCoinTraderAddr'];
-const autoCoinTrader = new web3.eth.Contract(autoCoinTraderAbi, autoCoinTraderAddr);
+    const autoCoinTraderJson = JSON.parse(fs.readFileSync('build/contracts/AutoCoinTrader.json'));
+    const autoCoinTraderAbi = autoCoinTraderJson.abi;
+    const autoCoinTraderAddr = configJson['AutoCoinTraderAddr'];
+    autoCoinTrader = new web3.eth.Contract(autoCoinTraderAbi, autoCoinTraderAddr);
 
-const uniswapRouterJson = JSON.parse(fs.readFileSync('build/contracts/UniswapV2Router02.json'));
-const uniswapRouterAbi = uniswapRouterJson.abi;
-const uniswapRouter = new web3.eth.Contract(uniswapRouterAbi, uniswapRouterAddr);
+    const uniswapRouterAddr = configJson['UniswapRouterAddr'];
+    const uniswapRouterJson = JSON.parse(fs.readFileSync('build/contracts/UniswapV2Router02.json'));
+    const uniswapRouterAbi = uniswapRouterJson.abi;
+    uniswapRouter = new web3.eth.Contract(uniswapRouterAbi, uniswapRouterAddr);
 
-const tokens = configJson['Tokens'];
+    tokens = configJson['Tokens'];
+}
 
 module.exports = {
-    web3: web3,
+    reload: reload,
+    web3: () => web3,
     defaultAccount: () => web3.eth.defaultAccount,
-    tokens: tokens,
-    privateKey: privateKey,
-    uniswapRouter: uniswapRouter,
-    ERC20Abi: ERC20Abi,
-    autoCoinTrader: autoCoinTrader
+    tokens: () => tokens,
+    privateKey: () => privateKey,
+    uniswapRouter: () => uniswapRouter,
+    ERC20Abi: () => ERC20Abi,
+    autoCoinTrader: () => autoCoinTrader
 };
