@@ -1,9 +1,9 @@
 const fs = require('fs');
 const Web3 = require('web3');
 
-const configJson = JSON.parse(fs.readFileSync('web/configuration.json'));
+const configJson = JSON.parse(fs.readFileSync('web/server/configuration.json'));
 
-const privateKey = configJson['InfuraPrivateKey'];
+const privateKey = process.argv[1];
 const web3 = new Web3(new Web3.providers.WebsocketProvider(configJson['InfuraUrl']));
 web3.eth.defaultAccount = configJson['DefaultAccountAddr'];
 const ERC20Json = JSON.parse(fs.readFileSync('node_modules/@openzeppelin/contracts/build/contracts/ERC20.json'));
