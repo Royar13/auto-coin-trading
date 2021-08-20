@@ -13,3 +13,7 @@ body {
 #tokens-list .token-title {
     font-weight: bold;
 }
+
+#amount-init {
+    margin-bottom: 15px;
+}

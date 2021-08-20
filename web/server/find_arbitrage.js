@@ -4,11 +4,14 @@ let exchangeRatesMat = null;
 let logExchangeRatesMat = null;
 
 module.exports = {
+    createExchangeRatesMat: createExchangeRatesMat,
     getExchangePath: getExchangePath,
     getExchangeRate: function (tokenA, tokenB) {
         return exchangeRatesMat[tokenA][tokenB];
     }
 };
+
+getExchangePath(conf.tokens());
 
 async function getExchangePath(tokens) {
     if (!exchangeRatesMat) {
@@ -76,10 +79,11 @@ function findArbitrageCycles(exchangeMat, source) {
     }
     minDist[source] = 0;
 
+    let epsilon = 0.00001;
     for (let iter = 0; iter < n - 1; iter++) {
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {
-                if (minDist[i] !== null && (minDist[j] == null || minDist[i] + exchangeMat[i][j] < minDist[j])) {
+                if (minDist[i] !== null && (minDist[j] == null || minDist[i] + exchangeMat[i][j] < minDist[j] - epsilon)) {
                     minDist[j] = minDist[i] + exchangeMat[i][j];
                     pre[j] = i;
                 }
@@ -87,8 +91,6 @@ function findArbitrageCycles(exchangeMat, source) {
         }
     }
 
-    //epsilon = 0.000000000000001
-    let epsilon = 0;
     let cycles = [];
     for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
