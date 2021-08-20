@@ -13,7 +13,8 @@ class App extends React.Component {
             showArbitrageCycle: false,
             balance: null,
             balanceUnit: null,
-            expectedProfit: null
+            expectedProfit: null,
+            amountIn: 0
         };
     }
 
@@ -52,6 +53,28 @@ class App extends React.Component {
             });
     }
 
+    calculateExpectedProfit() {
+        let url = Settings.API_URL + '/calculateExpectedProfit';
+        axios.get(url, {
+            params: {
+                amount: this.state.amountIn,
+                cycle: this.state.arbitrageCycle
+            }
+        })
+            .then(result => {
+                this.setState({
+                    expectedProfit: result.data.profit
+                });
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
+    handleAmountChange(e) {
+        this.setState({amountIn: e.target.value});
+    }
+
     render() {
         let listItems = [];
         let cycle = "No arbitrage cycle found";
@@ -88,11 +111,12 @@ class App extends React.Component {
                         <div>
                             How much would you like to invest?<br/>
                             <div id="amount-init">
-                                <input type="number" min="0" max={this.state.balance}/>
+                                <input type="number" min="0" max={this.state.balance} value={this.state.amountIn}
+                                       onChange={this.handleAmountChange.bind(this)}/>
                                 <button onClick={() => this.calculateExpectedProfit()}>Calculate Expected Profit
                                 </button>
                                 {this.state.expectedProfit && <div>
-
+                                    Expected profit: {this.state.expectedProfit} {this.state.balanceUnit}
                                 </div>}
                             </div>
                             <br/>
