@@ -3,7 +3,7 @@ const Web3 = require('web3');
 
 let configJson = JSON.parse(fs.readFileSync('web/server/configuration.json'));
 
-const privateKey = process.argv[1];
+const privateKey = process.argv[2];
 let web3;
 const ERC20Json = JSON.parse(fs.readFileSync('node_modules/@openzeppelin/contracts/build/contracts/ERC20.json'));
 const ERC20Abi = ERC20Json.abi;
@@ -51,9 +51,6 @@ async function reload() {
     tokens = configJson['Tokens'];
 }
 
-function initializeWeb3() {
-
-}
 
 module.exports = {
     reload: reload,

@@ -17,7 +17,7 @@
     }
   ],
   "InfuraUrl": "wss://kovan.infura.io/ws/v3/80acc13fcbcf4fe6a380a05c3231772e",
-  "DefaultAccountAddr": "0x85fF53E32FcCDA712e4A9AF650E5e3868AF34ae3",
+  "DefaultAccountAddr": "0x358086F78b2C0032b4CAa1159338c6687a7272Cd",
   "AutoCoinTraderAddr": "0x07A6601051d78734c4ef11a7EeB84247F6aa1B4F",
   "UniswapRouterAddr": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 }

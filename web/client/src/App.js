@@ -14,7 +14,8 @@ class App extends React.Component {
             balance: null,
             balanceUnit: null,
             expectedProfit: null,
-            amountIn: 0
+            amountIn: 0,
+            profit: null
         };
     }
 
@@ -71,8 +72,24 @@ class App extends React.Component {
             });
     }
 
+    performArbitrage() {
+        let url = Settings.API_URL + '/performArbitrage';
+        axios.post(url, {
+            amount: this.state.amountIn,
+            cycle: this.state.arbitrageCycle
+        })
+            .then(result => {
+                this.setState({
+                    profit: result.data.profit
+                });
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
     handleAmountChange(e) {
-        this.setState({amountIn: e.target.value});
+        this.setState({amountIn: parseInt(e.target.value)});
     }
 
     render() {
@@ -115,12 +132,16 @@ class App extends React.Component {
                                        onChange={this.handleAmountChange.bind(this)}/>
                                 <button onClick={() => this.calculateExpectedProfit()}>Calculate Expected Profit
                                 </button>
-                                {this.state.expectedProfit && <div>
+                                {this.state.expectedProfit !== null && <div>
                                     Expected profit: {this.state.expectedProfit} {this.state.balanceUnit}
                                 </div>}
                             </div>
                             <br/>
                             <button onClick={() => this.performArbitrage()}>Perform Arbitrage</button>
+                            {this.state.profit !== null && <div>
+                                Arbitrage performed successfully!<br/>
+                                Net profit: {this.state.profit} {this.state.balanceUnit}
+                            </div>}
                         </div>
                     </div>
                     }

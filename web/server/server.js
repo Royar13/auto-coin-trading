@@ -43,6 +43,13 @@ app.get('/api/calculateExpectedProfit', async (req, res) => {
     res.json({profit: profit});
 });
 
+app.post('/api/performArbitrage', async (req, res) => {
+    let amountIn = req.body.amount;
+    let cycle = req.body.cycle;
+    let profit = await tokenExchange.performArbitrage(amountIn, cycle);
+    res.json({profit: profit});
+});
+
 function exportConfigToClient() {
     return {
         defaultAccountAddr: conf.defaultAccount(),
