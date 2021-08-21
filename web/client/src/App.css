@@ -17,3 +17,7 @@ body {
 #amount-init {
     margin-bottom: 15px;
 }
+
+#amount-init input {
+    width: 250px;
+}

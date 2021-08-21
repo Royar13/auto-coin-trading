@@ -3,21 +3,21 @@
     {
       "name": "Etherium",
       "unit": "WETH",
-      "address": "0xd0a1e359811322d97991e03f863a0c30c2cf029c"
+      "address": "0xc778417e063141139fce010982780140aa0cd5ab"
     },
     {
-      "name": "NewSampleToken",
-      "unit": "NTOK",
-      "address": "0xEa14a7826078Bed4Fe9F41EC322A802f169B98b9"
+      "name": "Roy Token",
+      "unit": "RTOK",
+      "address": "0x13231CD9352C3EaD7cc576e1f7369AC5cfe1d9e3"
     },
     {
-      "name": "MichalToken",
-      "unit": "MST",
-      "address": "0x0E9999fbe2fe4f93A9f3B2E094d5b49222754114"
+      "name": "Michal Token",
+      "unit": "MTOK",
+      "address": "0xbca7184D94E3808bbe3cc06af8510728E63E178A"
     }
   ],
-  "InfuraUrl": "wss://kovan.infura.io/ws/v3/80acc13fcbcf4fe6a380a05c3231772e",
+  "InfuraUrl": "wss://rinkeby.infura.io/ws/v3/",
   "DefaultAccountAddr": "0x358086F78b2C0032b4CAa1159338c6687a7272Cd",
-  "AutoCoinTraderAddr": "0x07A6601051d78734c4ef11a7EeB84247F6aa1B4F",
+  "AutoCoinTraderAddr": "0xa4b8db23dA0dCEFd4c57aa8DeebCBA0b4e476545",
   "UniswapRouterAddr": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 }

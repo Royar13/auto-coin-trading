@@ -11,8 +11,6 @@ module.exports = {
     }
 };
 
-getExchangePath(conf.tokens());
-
 async function getExchangePath(tokens) {
     if (!exchangeRatesMat) {
         exchangeRatesMat = await createExchangeRatesMat(tokens);

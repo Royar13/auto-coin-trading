@@ -1,9 +1,9 @@
+require('dotenv').config();
 const fs = require('fs');
 const Web3 = require('web3');
 
 let configJson = JSON.parse(fs.readFileSync('web/server/configuration.json'));
 
-const privateKey = process.argv[2];
 let web3;
 const ERC20Json = JSON.parse(fs.readFileSync('node_modules/@openzeppelin/contracts/build/contracts/ERC20.json'));
 const ERC20Abi = ERC20Json.abi;
@@ -35,7 +35,8 @@ async function reload() {
             onTimeout: false
         }
     };
-    web3 = new Web3(new Web3.providers.WebsocketProvider(configJson['InfuraUrl'], options));
+    const infuraUrl = configJson['InfuraUrl'] + process.env.INFURA_PROJECT_ID;
+    web3 = new Web3(new Web3.providers.WebsocketProvider(infuraUrl, options));
     web3.eth.defaultAccount = configJson['DefaultAccountAddr'];
 
     const autoCoinTraderJson = JSON.parse(fs.readFileSync('build/contracts/AutoCoinTrader.json'));
@@ -57,7 +58,7 @@ module.exports = {
     web3: () => web3,
     defaultAccount: () => web3.eth.defaultAccount,
     tokens: () => tokens,
-    privateKey: () => privateKey,
+    privateKey: () => process.env.PRIVATE_KEY,
     uniswapRouter: () => uniswapRouter,
     ERC20Abi: () => ERC20Abi,
     autoCoinTrader: () => autoCoinTrader

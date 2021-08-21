@@ -20,7 +20,6 @@
 require('dotenv').config();
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const privateKey = process.env.PRIVATE_KEY;
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
@@ -59,12 +58,12 @@ module.exports = {
         // },
         // Useful for deploying to a public network.
         // NB: It's important to wrap the provider as a function.
-        kovan: {
+        rinkeby: {
             provider: () => new HDWalletProvider({
-                privateKeys: [privateKey],
-                providerOrUrl: "wss://kovan.infura.io/ws/v3/" + process.env.INFURA_PROJECT_ID
+                privateKeys: [process.env.PRIVATE_KEY],
+                providerOrUrl: "wss://rinkeby.infura.io/ws/v3/" + process.env.INFURA_PROJECT_ID
             }),
-            network_id: "42",
+            network_id: "4",
             // gas: 5500000,        // kovan has a lower block limit than mainnet
             // confirmations: 2,    // # of confs to wait between deployments. (default: 0)
             // timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
