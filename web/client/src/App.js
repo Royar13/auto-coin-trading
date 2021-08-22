@@ -135,22 +135,23 @@ class App extends React.Component {
             );
 
             if (this.state.arbitrageCycle) {
-                cycle = this.state.arbitrageCycle.map(c => this.state.config.tokens[c].name).join('-->');
+                cycle = this.state.arbitrageCycle.map(c => this.state.config.tokens[c].unit).join('-->');
             }
         }
 
         let transLi = [];
         if (this.state.transDetails) {
             transLi = this.state.transDetails.map((trans, i) =>
-                <li>
-                    <a href={"https://rinkeby.etherscan.io/tx/" + trans.hash} target="_blank">{trans.hash}</a>:&nbsp;
+                <li key={i}>
+                    <a href={"https://rinkeby.etherscan.io/tx/" + trans.hash} target="_blank"
+                       rel="noreferrer">{trans.hash}</a>:&nbsp;
                     {trans.fromToken}-->{trans.toToken}
                 </li>
             );
         }
 
         return (
-            <div>
+            <div id="container">
                 <div id="top-data">
                     <div id="tokens-list-init">
                         <h2>Tokens:</h2>
@@ -160,44 +161,54 @@ class App extends React.Component {
                     </div>
                     <ExchangeRatesTable config={this.state.config}/>
                 </div>
-                <button onClick={() => this.findArbitrageCycle()}>Find Arbitrage Cycle</button>
+                <button onClick={() => this.findArbitrageCycle()} disabled={this.state.executingArbitrage}>Find
+                    Arbitrage Cycle
+                </button>
                 {this.state.showArbitrageCycle &&
                 <div id="arbitrage-init">
-                    <div>
-                        {cycle}
+                    <div id="cycle-init">
+                        <b>Cycle:</b>
+                        <div>{cycle}</div>
                     </div>
                     {this.state.balance &&
                     <div>
-                        <div>
+                        <div id="balance-init">
                             <b>Your
                                 balance</b>: {this.state.balance} {this.state.balanceUnit} (={this.fromWei(this.state.balance)}x10<sup>{this.WEI_DECIMALS}</sup>)
                         </div>
                         <div>
-                            How much would you like to invest?<br/>
+                            How much would you like to invest? (in {this.state.balanceUnit})<br/>
                             <div id="amount-init">
                                 <input type="number" min="0" max={this.state.balance} value={this.state.amountIn}
-                                       onChange={this.handleAmountChange.bind(this)}/>
-                                <button onClick={() => this.calculateExpectedProfit()}>Calculate Expected Profit
+                                       onChange={this.handleAmountChange.bind(this)}
+                                       disabled={this.state.executingArbitrage}/>
+                                <button onClick={() => this.calculateExpectedProfit()}
+                                        disabled={this.state.executingArbitrage}>Calculate Expected Profit
                                 </button>
                                 {this.state.expectedProfit !== null && <div>
-                                    <b>Expected profit</b>: {this.state.expectedProfit} {this.state.balanceUnit}
+                                    <b>Expected
+                                        profit</b>: {this.state.expectedProfit} {this.state.balanceUnit}
                                 </div>}
                             </div>
-                            <br/>
-                            <button onClick={() => this.performArbitrage()}>Perform Arbitrage</button>
+                            <button onClick={() => this.performArbitrage()}
+                                    disabled={this.state.executingArbitrage}>Perform Arbitrage
+                            </button>
                             {this.state.executingArbitrage && <div>
                                 <img className="loading-icon" src={process.env.PUBLIC_URL + "/loading-icon.gif"}
                                      alt="loading icon"/>
                             </div>}
                             {this.state.profit !== null && <div>
-                                Arbitrage performed successfully!<br/>
-                                <b>Profit:</b> {this.state.profit} {this.state.balanceUnit}<br/>
-                                <b>Gas cost (Ether):</b> {this.state.gasCost}<br/>
-                                <b>Estimated net profit (after
-                                    gas):</b> {this.state.actualProfit} {this.state.balanceUnit} (={this.fromWei(this.state.actualProfit)}x10<sup>{this.WEI_DECIMALS}</sup>)
-                                <ul>
-                                    {transLi}
-                                </ul>
+                                Arbitrage performed successfully!
+                                <div id="arbitrage-result">
+                                    <b>Profit:</b> {this.state.profit} {this.state.balanceUnit}<br/>
+                                    <b>Gas cost (Ether):</b> {this.state.gasCost}<br/>
+                                    <b>Estimated net profit (after
+                                        gas):</b> {this.state.actualProfit} {this.state.balanceUnit} (={this.fromWei(this.state.actualProfit)}x10<sup>{this.WEI_DECIMALS}</sup>)<br/>
+                                    <b>Transactions:</b>
+                                    <ul>
+                                        {transLi}
+                                    </ul>
+                                </div>
                             </div>}
                         </div>
                     </div>
