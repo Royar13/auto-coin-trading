@@ -5,13 +5,22 @@
 
 #exchange-rates th {
     text-align: center;
-    padding: 3px;
+    padding: 7px;
+    font-size: 11px;
 }
 
 #exchange-rates td {
     border: 1px solid #000;
-    padding: 5px;
+    padding: 10px;
     text-align: center;
+}
+
+#exchange-rates td:first-child {
+    border: 0;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 7px;
+    padding-left: 0;
 }
 
 #exchange-rates caption {

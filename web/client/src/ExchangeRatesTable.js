@@ -18,19 +18,21 @@ class ExchangeRatesTable extends React.Component {
             let th = [];
             if (this.props.config) {
                 th = this.props.config.tokens.map((token, i) =>
-                    <th key={i}>{token.unit}</th>
+                    <th key={i + 1}>{token.unit}</th>
                 );
+                th = [<th key="0"></th>].concat(th);
             }
             headerRow = <tr>{th}</tr>
             tr = this.state.exchangeRatesMat.map((row, i) => {
                 let td = row.map((col, i) => {
                     let num = Math.round(col * 1000) / 1000;
                     return (
-                        <td key={i}>
+                        <td key={i + 1}>
                             {num}
                         </td>
                     );
                 });
+                td = [<td key="0">{this.props.config.tokens[i].unit}</td>].concat(td);
                 return (
                     <tr key={i}>
                         {td}
