@@ -34,7 +34,7 @@ class App extends React.Component {
         let url = Settings.API_URL + '/findArbitrageCycle';
         axios.get(url)
             .then(result => {
-                this.state.showArbitrageCycle = true
+                this.setState({showArbitrageCycle: true});
                 if (result.data.cycle) {
                     let token = this.state.config.tokens[result.data.cycle[0]];
                     this.getTokenBalance(token.address).then(val => {
@@ -110,10 +110,15 @@ class App extends React.Component {
 
         return (
             <div>
-                <ul id="tokens-list">
-                    {listItems}
-                </ul>
-                <ExchangeRatesTable config={this.state.config}/>
+                <div id="top-data">
+                    <div id="tokens-list-init">
+                        <h2>Tokens:</h2>
+                        <ul id="tokens-list">
+                            {listItems}
+                        </ul>
+                    </div>
+                    <ExchangeRatesTable config={this.state.config}/>
+                </div>
                 <button onClick={() => this.findArbitrageCycle()}>Find arbitrage cycle</button>
                 {this.state.showArbitrageCycle &&
                 <div>

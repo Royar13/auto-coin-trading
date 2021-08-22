@@ -17,20 +17,22 @@ class ExchangeRatesTable extends React.Component {
         if (this.state.exchangeRatesMat) {
             let th = [];
             if (this.props.config) {
-                th = this.props.config.tokens.map(token =>
-                    <th>{token.unit}</th>
+                th = this.props.config.tokens.map((token, i) =>
+                    <th key={i}>{token.unit}</th>
                 );
             }
             headerRow = <tr>{th}</tr>
-            tr = this.state.exchangeRatesMat.map(row => {
-
-                let td = row.map(col =>
-                    <td>
-                        {col}
-                    </td>
-                );
+            tr = this.state.exchangeRatesMat.map((row, i) => {
+                let td = row.map((col, i) => {
+                    let num = Math.round(col * 1000) / 1000;
+                    return (
+                        <td key={i}>
+                            {num}
+                        </td>
+                    );
+                });
                 return (
-                    <tr>
+                    <tr key={i}>
                         {td}
                     </tr>
                 );
@@ -39,7 +41,7 @@ class ExchangeRatesTable extends React.Component {
 
         return (
             <table id="exchange-rates">
-                <caption>Exchange Rates</caption>
+                <caption>Exchange Rates:</caption>
                 <thead>
                 {headerRow}
                 </thead>

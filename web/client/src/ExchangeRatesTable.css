@@ -1,10 +1,22 @@
 #exchange-rates {
     border-collapse: collapse;
-    margin-top: 35px;
-    margin-bottom: 10px;
+    min-width: 200px;
+}
+
+#exchange-rates th {
+    text-align: center;
+    padding: 3px;
 }
 
 #exchange-rates td {
     border: 1px solid #000;
     padding: 5px;
+    text-align: center;
+}
+
+#exchange-rates caption {
+    font-size: 18px;
+    font-weight: bold;
+    padding-bottom: 10px;
+    text-align: left;
 }

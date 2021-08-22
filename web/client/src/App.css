@@ -2,12 +2,39 @@ body {
     font-size: 14px;
 }
 
+#tokens-list-init {
+    float: left;
+}
+
+#tokens-list-init h2 {
+    font-size: 18px;
+    margin: 0;
+    margin-bottom: 2px;
+}
+
 #tokens-list h3 {
-    font-size: 16px;
+    font-size: 15px;
+    margin-bottom: 2px;
+    margin-top: 0;
 }
 
 #tokens-list {
     font-size: 12px;
+    list-style-type: none;
+    padding: 20px;
+    margin: 0;
+    margin-right: 30px;
+    margin-bottom: 15px;
+    background-color: #f3f3f3;
+    border-radius: 5px;
+}
+
+#tokens-list li {
+    margin-bottom: 15px;
+}
+
+#tokens-list li:last-child {
+    margin-bottom: 0;
 }
 
 #tokens-list .token-title {
@@ -20,4 +47,13 @@ body {
 
 #amount-init input {
     width: 250px;
+}
+
+ExchangeRatesTable {
+    float: left;
+}
+
+#top-data {
+    overflow: auto;
+    margin-bottom: 15px;
 }
