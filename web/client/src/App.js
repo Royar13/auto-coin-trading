@@ -5,6 +5,8 @@ import Settings from './settings'
 import ExchangeRatesTable from './ExchangeRatesTable'
 
 class App extends React.Component {
+    WEI_DECIMALS = 18;
+
     constructor(props) {
         super(props);
         this.state = {
@@ -15,8 +17,24 @@ class App extends React.Component {
             balanceUnit: null,
             expectedProfit: null,
             amountIn: 0,
-            profit: null
+            profit: null,
+            executingArbitrage: false,
+            gasCost: null,
+            actualProfit: null,
+            transDetails: []
         };
+    }
+
+    fromWei(num) {
+        const roundToDigits = 4;
+        let numDigits = num.toString().length;
+        let digitsRemoved = 0;
+        if (numDigits > roundToDigits) {
+            digitsRemoved = numDigits - roundToDigits;
+            num = Math.round(num / Math.pow(10, digitsRemoved));
+        }
+        num /= Math.pow(10, this.WEI_DECIMALS - digitsRemoved);
+        return num;
     }
 
     getTokenBalance(address) {
@@ -73,18 +91,31 @@ class App extends React.Component {
     }
 
     performArbitrage() {
+        this.setState({
+            executingArbitrage: true,
+            profit: null
+        });
         let url = Settings.API_URL + '/performArbitrage';
         axios.post(url, {
             amount: this.state.amountIn,
             cycle: this.state.arbitrageCycle
         })
             .then(result => {
+                let actualProfit = result.data.profit - result.data.gasCostInToken;
                 this.setState({
-                    profit: result.data.profit
+                    profit: result.data.profit,
+                    gasCost: result.data.gasCost,
+                    actualProfit: actualProfit,
+                    transDetails: result.data.transactions
                 });
             })
             .catch(error => {
                 console.error(error);
+            })
+            .finally(() => {
+                this.setState({
+                    executingArbitrage: false
+                });
             });
     }
 
@@ -108,6 +139,16 @@ class App extends React.Component {
             }
         }
 
+        let transLi = [];
+        if (this.state.transDetails) {
+            transLi = this.state.transDetails.map((trans, i) =>
+                <li>
+                    <a href={"https://rinkeby.etherscan.io/tx/" + trans.hash} target="_blank">{trans.hash}</a>:&nbsp;
+                    {trans.fromToken}-->{trans.toToken}
+                </li>
+            );
+        }
+
         return (
             <div>
                 <div id="top-data">
@@ -119,16 +160,17 @@ class App extends React.Component {
                     </div>
                     <ExchangeRatesTable config={this.state.config}/>
                 </div>
-                <button onClick={() => this.findArbitrageCycle()}>Find arbitrage cycle</button>
+                <button onClick={() => this.findArbitrageCycle()}>Find Arbitrage Cycle</button>
                 {this.state.showArbitrageCycle &&
-                <div>
+                <div id="arbitrage-init">
                     <div>
                         {cycle}
                     </div>
                     {this.state.balance &&
                     <div>
                         <div>
-                            Your balance: {this.state.balance} {this.state.balanceUnit}
+                            <b>Your
+                                balance</b>: {this.state.balance} {this.state.balanceUnit} (={this.fromWei(this.state.balance)}x10<sup>{this.WEI_DECIMALS}</sup>)
                         </div>
                         <div>
                             How much would you like to invest?<br/>
@@ -138,14 +180,24 @@ class App extends React.Component {
                                 <button onClick={() => this.calculateExpectedProfit()}>Calculate Expected Profit
                                 </button>
                                 {this.state.expectedProfit !== null && <div>
-                                    Expected profit: {this.state.expectedProfit} {this.state.balanceUnit}
+                                    <b>Expected profit</b>: {this.state.expectedProfit} {this.state.balanceUnit}
                                 </div>}
                             </div>
                             <br/>
                             <button onClick={() => this.performArbitrage()}>Perform Arbitrage</button>
+                            {this.state.executingArbitrage && <div>
+                                <img className="loading-icon" src={process.env.PUBLIC_URL + "/loading-icon.gif"}
+                                     alt="loading icon"/>
+                            </div>}
                             {this.state.profit !== null && <div>
                                 Arbitrage performed successfully!<br/>
-                                Net profit: {this.state.profit} {this.state.balanceUnit}
+                                <b>Profit:</b> {this.state.profit} {this.state.balanceUnit}<br/>
+                                <b>Gas cost (Ether):</b> {this.state.gasCost}<br/>
+                                <b>Estimated net profit (after
+                                    gas):</b> {this.state.actualProfit} {this.state.balanceUnit} (={this.fromWei(this.state.actualProfit)}x10<sup>{this.WEI_DECIMALS}</sup>)
+                                <ul>
+                                    {transLi}
+                                </ul>
                             </div>}
                         </div>
                     </div>

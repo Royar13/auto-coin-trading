@@ -37,7 +37,7 @@ app.get('/api/getBalance', async (req, res) => {
 });
 
 app.get('/api/calculateExpectedProfit', async (req, res) => {
-    let amountIn = req.query.amount;
+    let amountIn = parseInt(req.query.amount);
     let cycle = req.query.cycle;
     let profit = await tokenExchange.calculateExpectedProfit(cycle, amountIn);
     res.json({profit: profit});
@@ -46,8 +46,8 @@ app.get('/api/calculateExpectedProfit', async (req, res) => {
 app.post('/api/performArbitrage', async (req, res) => {
     let amountIn = req.body.amount;
     let cycle = req.body.cycle;
-    let profit = await tokenExchange.performArbitrage(amountIn, cycle);
-    res.json({profit: profit});
+    let result = await tokenExchange.performArbitrage(amountIn, cycle);
+    res.json(result);
 });
 
 function exportConfigToClient() {

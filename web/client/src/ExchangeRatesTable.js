@@ -43,7 +43,9 @@ class ExchangeRatesTable extends React.Component {
 
         return (
             <table id="exchange-rates">
-                <caption>Exchange Rates:</caption>
+                <caption>Exchange Rates (Uniswap<img src={process.env.PUBLIC_URL + "/uniswap-uni-logo-small.png"}
+                                                      alt="Uniswap logo"/>):
+                </caption>
                 <thead>
                 {headerRow}
                 </thead>

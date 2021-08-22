@@ -60,3 +60,11 @@ ExchangeRatesTable {
     overflow: auto;
     margin-bottom: 15px;
 }
+
+#arbitrage-init {
+
+}
+
+.loading-icon {
+    width: 25px;
+}

@@ -1,6 +1,6 @@
 #exchange-rates {
     border-collapse: collapse;
-    min-width: 200px;
+    min-width: 280px;
 }
 
 #exchange-rates th {
@@ -28,4 +28,9 @@
     font-weight: bold;
     padding-bottom: 10px;
     text-align: left;
+}
+
+#exchange-rates caption img {
+    width: 22px;
+    height: 22px;
 }
