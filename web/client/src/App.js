@@ -203,7 +203,7 @@ class App extends React.Component {
                                 Arbitrage performed successfully!
                                 <div id="arbitrage-result">
                                     <b>Profit:</b> {this.state.profit} {this.state.balanceUnit}<br/>
-                                    <b>Gas cost (Ether):</b> {this.state.gasCost}<br/>
+                                    <b>Gas cost:</b> {this.state.gasCost} Ether<br/>
                                     <b>Estimated net profit (after
                                         gas):</b> {this.state.actualProfit} {this.state.balanceUnit} (={this.fromWei(this.state.actualProfit)}x10<sup>{this.WEI_DECIMALS}</sup>)<br/>
                                     <b>Transactions:</b>
