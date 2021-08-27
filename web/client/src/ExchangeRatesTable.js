@@ -14,14 +14,12 @@ class ExchangeRatesTable extends React.Component {
     render() {
         let tr = [];
         let headerRow;
-        if (this.state.exchangeRatesMat) {
+        if (this.state.exchangeRatesMat && this.props.config) {
             let th = [];
-            if (this.props.config) {
-                th = this.props.config.tokens.map((token, i) =>
-                    <th key={i + 1}>{token.unit}</th>
-                );
-                th = [<th key="0"></th>].concat(th);
-            }
+            th = this.props.config.tokens.map((token, i) =>
+                <th key={i + 1}>{token.unit}</th>
+            );
+            th = [<th key="0"></th>].concat(th);
             headerRow = <tr>{th}</tr>
             tr = this.state.exchangeRatesMat.map((row, i) => {
                 let td = row.map((col, i) => {
@@ -44,7 +42,7 @@ class ExchangeRatesTable extends React.Component {
         return (
             <table id="exchange-rates">
                 <caption>Exchange Rates (Uniswap<img src={process.env.PUBLIC_URL + "/uniswap-uni-logo-small.png"}
-                                                      alt="Uniswap logo"/>):
+                                                     alt="Uniswap logo"/>):
                 </caption>
                 <thead>
                 {headerRow}

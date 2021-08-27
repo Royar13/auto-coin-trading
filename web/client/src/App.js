@@ -82,7 +82,7 @@ class App extends React.Component {
         })
             .then(result => {
                 this.setState({
-                    expectedProfit: result.data.profit
+                    expectedProfit: result.data
                 });
             })
             .catch(error => {
@@ -186,7 +186,10 @@ class App extends React.Component {
                                 </button>
                                 {this.state.expectedProfit !== null && <div>
                                     <b>Expected
-                                        profit</b>: {this.state.expectedProfit} {this.state.balanceUnit}
+                                        profit:</b> {this.state.expectedProfit.profit} {this.state.balanceUnit} <br/>
+                                    <b>Estimated gas price:</b> {this.state.expectedProfit.estimatedGasPrice} Ether <br/>
+                                    <b>Expected net
+                                        profit:</b> {this.state.expectedProfit.netProfit} {this.state.balanceUnit}
                                 </div>}
                             </div>
                             <button onClick={() => this.performArbitrage()}

@@ -31,7 +31,7 @@ async function performArbitrage(amountIn, cycle) {
     const initialTokenBalance = await tokenContract.methods.balanceOf(conf.defaultAccount()).call();
 
     // transfer autoCoinTrader the initial amountIn of the token
-    let transferMethod = tokenContract.methods.transfer(conf.autoCoinTrader()._address, amountIn.toString());
+    let transferMethod = getTransferTokenMethod(tokenContract, amountIn);
     let transferEncodedAbi = transferMethod.encodeABI();
     let transferTx = {
         from: conf.defaultAccount(),
@@ -39,17 +39,14 @@ async function performArbitrage(amountIn, cycle) {
         gas: gas,
         data: transferEncodedAbi
     };
-
     let signedTokenTransferTrans = await conf.web3().eth.accounts.signTransaction(transferTx, conf.privateKey());
-
     let tokenTransferReceipt = await conf.web3().eth.sendSignedTransaction(signedTokenTransferTrans.rawTransaction);
     transHash.push(tokenTransferReceipt.transactionHash);
-
     console.log('Token transfer reciept:');
     console.log(tokenTransferReceipt);
 
     let cycleAddr = cycle.map(i => conf.tokens()[cycle[i]].address);
-    let tradeMethod = conf.autoCoinTrader().methods.trade(conf.uniswapRouter()._address, cycleAddr, amountIn.toString());
+    let tradeMethod = getTradeMethod(cycleAddr, amountIn);
     let tradeEncodedAbi = tradeMethod.encodeABI();
     let tradeTx = {
         from: conf.defaultAccount(),
@@ -65,8 +62,7 @@ async function performArbitrage(amountIn, cycle) {
     transHash.push(tradeReceipt.transactionHash);
 
     //collect the last token of the trade chain into our account
-    let lastToken = conf.tokens()[cycle[cycle.length - 1]];
-    let collectTokenMethod = conf.autoCoinTrader().methods.collectToken(lastToken.address);
+    let collectTokenMethod = getCollectTokenMethod(initialToken.address);
     let collectTokenEncodedAbi = collectTokenMethod.encodeABI();
     let collectTokenTx = {
         from: conf.defaultAccount(),
@@ -96,11 +92,48 @@ async function performArbitrage(amountIn, cycle) {
     };
 }
 
+function getTransferTokenMethod(tokenContract, amountIn) {
+    return tokenContract.methods.transfer(conf.autoCoinTrader()._address, amountIn.toString());
+}
+
+function getTradeMethod(cycleAddr, amountIn) {
+    return conf.autoCoinTrader().methods.trade(conf.uniswapRouter()._address, cycleAddr, amountIn.toString());
+}
+
+function getCollectTokenMethod(address) {
+    return conf.autoCoinTrader().methods.collectToken(address);
+}
+
+/**
+ * Estimate the gas cost of performing the exchange cycle
+ */
+async function estimateGasCost(cycle, initialAmount) {
+    const web3 = conf.web3();
+    const initialToken = conf.tokens()[cycle[0]];
+    const initialTokenContract = new web3.eth.Contract(conf.ERC20Abi(), initialToken.address);
+    const transferTokenMethod = getTransferTokenMethod(initialTokenContract, initialAmount);
+    const tokenTransferGasEstimate = await transferTokenMethod.estimateGas();
+
+    const cycleAddr = cycle.map(i => conf.tokens()[cycle[i]].address);
+    const tradeMethod = getTradeMethod(cycleAddr, initialAmount);
+    const tradeGasEstimate = await tradeMethod.estimateGas();
+
+    const collectTokenMethod = getCollectTokenMethod(initialToken.address);
+    const collectTokenGasEstimate = await collectTokenMethod.estimateGas();
+
+    const totalGas = tokenTransferGasEstimate + tradeGasEstimate + collectTokenGasEstimate;
+    const gasPrice = await web3.eth.getGasPrice();
+    const totalGasPrice = totalGas * gasPrice;
+    return totalGasPrice;
+}
+
 /**
  * Calculate how much profit would be earned by executing an arbitrage exchange cycle
  * (not including gas price)
  */
 async function simulateCycleExchange(cycle, initialAmount) {
+    await arbitrage.createExchangeRatesMat(conf.tokens());
+
     let amountIn = initialAmount;
     for (let i = 0; i < cycle.length - 1; i++) {
         let tokenA = conf.tokens()[cycle[i]];
@@ -109,6 +142,11 @@ async function simulateCycleExchange(cycle, initialAmount) {
         let amounts = await conf.uniswapRouter().methods.getAmountsOut(amountIn.toString(), path).call();
         amountIn = parseInt(amounts[1]);
     }
-    let profit = amountIn - initialAmount;
-    return profit;
+    const profit = amountIn - initialAmount;
+    const estimatedGasPrice = await estimateGasCost(cycle, initialAmount);
+    const exchangeRate = arbitrage.getExchangeRate(0, cycle[0]);
+    const gasCostInToken = estimatedGasPrice * exchangeRate;
+    const netProfit = profit - gasCostInToken;
+
+    return {profit: profit, estimatedGasPrice: estimatedGasPrice, netProfit: netProfit};
 }

@@ -38,9 +38,9 @@ app.get('/api/getBalance', async (req, res) => {
 
 app.get('/api/calculateExpectedProfit', async (req, res) => {
     let amountIn = parseInt(req.query.amount);
-    let cycle = req.query.cycle;
+    let cycle = req.query.cycle.map(i => parseInt(i));
     let profit = await tokenExchange.calculateExpectedProfit(cycle, amountIn);
-    res.json({profit: profit});
+    res.json(profit);
 });
 
 app.post('/api/performArbitrage', async (req, res) => {
