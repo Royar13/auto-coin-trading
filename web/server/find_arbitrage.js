@@ -13,8 +13,10 @@ module.exports = {
 
 async function getExchangePath(tokens) {
     if (!exchangeRatesMat) {
-        exchangeRatesMat = await createExchangeRatesMat(tokens);
+        await createExchangeRatesMat(tokens);
         console.log(exchangeRatesMat);
+    }
+    if (!logExchangeRatesMat) {
         logExchangeRatesMat = applyLogMat(exchangeRatesMat);
     }
     let cycles = findArbitrageCycles(logExchangeRatesMat, 0);
@@ -37,22 +39,22 @@ async function fetchUniswapExchangeRate(tokenA, tokenB) {
 }
 
 async function createExchangeRatesMat(tokens) {
-    let ratesMat = [];
+    exchangeRatesMat = [];
     //initialize 2-dimensional array
     for (let i = 0; i < tokens.length; i++) {
-        ratesMat[i] = [];
-        ratesMat[i][i] = 1;
+        exchangeRatesMat[i] = [];
+        exchangeRatesMat[i][i] = 1;
     }
 
     for (let i = 0; i < tokens.length - 1; i++) {
         for (let j = i + 1; j < tokens.length; j++) {
             let rate = await fetchUniswapExchangeRate(tokens[i].address, tokens[j].address);
-            ratesMat[i][j] = rate;
-            ratesMat[j][i] = 1 / rate;
+            exchangeRatesMat[i][j] = rate;
+            exchangeRatesMat[j][i] = 1 / rate;
         }
     }
 
-    return ratesMat;
+    return exchangeRatesMat;
 }
 
 function applyLogMat(exchangeMat) {
