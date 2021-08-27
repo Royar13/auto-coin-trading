@@ -21,7 +21,7 @@ class App extends React.Component {
             executingArbitrage: false,
             gasCost: null,
             actualProfit: null,
-            transDetails: []
+            transactions: []
         };
     }
 
@@ -106,7 +106,7 @@ class App extends React.Component {
                     profit: result.data.profit,
                     gasCost: result.data.gasCost,
                     actualProfit: actualProfit,
-                    transDetails: result.data.transactions
+                    transactions: result.data.transactions
                 });
             })
             .catch(error => {
@@ -140,12 +140,11 @@ class App extends React.Component {
         }
 
         let transLi = [];
-        if (this.state.transDetails) {
-            transLi = this.state.transDetails.map((trans, i) =>
+        if (this.state.transactions) {
+            transLi = this.state.transactions.map((hash, i) =>
                 <li key={i}>
-                    <a href={"https://rinkeby.etherscan.io/tx/" + trans.hash} target="_blank"
-                       rel="noreferrer">{trans.hash}</a>:&nbsp;
-                    {trans.fromToken}-->{trans.toToken}
+                    <a href={"https://rinkeby.etherscan.io/tx/" + hash} target="_blank"
+                       rel="noreferrer">{hash}</a>
                 </li>
             );
         }

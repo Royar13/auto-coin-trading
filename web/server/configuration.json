@@ -18,6 +18,6 @@
   ],
   "InfuraUrl": "wss://rinkeby.infura.io/ws/v3/",
   "DefaultAccountAddr": "0x358086F78b2C0032b4CAa1159338c6687a7272Cd",
-  "AutoCoinTraderAddr": "0xa4b8db23dA0dCEFd4c57aa8DeebCBA0b4e476545",
+  "AutoCoinTraderAddr": "0x6a49f1B778dEDFb1B51E10E09008c0f2321FdA56",
   "UniswapRouterAddr": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 }

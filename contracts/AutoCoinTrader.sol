@@ -19,14 +19,20 @@ contract AutoCoinTrader {
         tokenAddr.call(abi.encodeWithSignature("transfer(address,uint256)", owner, balance));
     }
 
-    function trade(address uniswapRouterAddr, address coinIn, address coinOut, uint amountIn, uint amountOutMin) public payable returns (uint[] memory amounts){
-        (bool success, bytes memory returnData) = coinIn.call(abi.encodeWithSignature("approve(address,uint256)", uniswapRouterAddr, amountIn));
-        require(success);
-
+    function trade(address uniswapRouterAddr, address[] memory tokensCycle, uint amountIn) public payable returns (uint[] memory amounts){
         address[] memory path = new address[](2);
-        path[0] = coinIn;
-        path[1] = coinOut;
+        uint[] memory amountsOut;
         IUniswapV2Router02 uniswapRouter = IUniswapV2Router02(uniswapRouterAddr);
-        return uniswapRouter.swapExactTokensForTokens(amountIn, amountOutMin, path, address(this), block.timestamp);
+        for (uint i = 0; i < tokensCycle.length - 1; i++) {
+            path[0] = tokensCycle[i];
+            path[1] = tokensCycle[i + 1];
+            (bool success, ) = tokensCycle[i].call(abi.encodeWithSignature("approve(address,uint256)", uniswapRouterAddr, amountIn));
+            require(success);
+            amountsOut = uniswapRouter.getAmountsOut(amountIn, path);
+            uint amountsOutMin = amountsOut[1] * 9 / 10;
+            amounts = uniswapRouter.swapExactTokensForTokens(amountIn, amountsOutMin, path, address(this), block.timestamp);
+            amountIn = amounts[1];
+        }
+        return amounts;
     }
 }
