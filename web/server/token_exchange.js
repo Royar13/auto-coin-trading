@@ -109,21 +109,9 @@ function getCollectTokenMethod(address) {
  */
 async function estimateGasCost(cycle, initialAmount) {
     const web3 = conf.web3();
-    const initialToken = conf.tokens()[cycle[0]];
-    const initialTokenContract = new web3.eth.Contract(conf.ERC20Abi(), initialToken.address);
-    const transferTokenMethod = getTransferTokenMethod(initialTokenContract, initialAmount);
-    const tokenTransferGasEstimate = await transferTokenMethod.estimateGas();
-
-    const cycleAddr = cycle.map(i => conf.tokens()[cycle[i]].address);
-    const tradeMethod = getTradeMethod(cycleAddr, initialAmount);
-    const tradeGasEstimate = await tradeMethod.estimateGas();
-
-    const collectTokenMethod = getCollectTokenMethod(initialToken.address);
-    const collectTokenGasEstimate = await collectTokenMethod.estimateGas();
-
-    const totalGas = tokenTransferGasEstimate + tradeGasEstimate + collectTokenGasEstimate;
     const gasPrice = await web3.eth.getGasPrice();
-    const totalGasPrice = totalGas * gasPrice;
+    const estimatedGasAmount = 400000;
+    const totalGasPrice = estimatedGasAmount * gasPrice;
     return totalGasPrice;
 }
 
