@@ -12,16 +12,11 @@ class App extends React.Component {
         this.state = {
             config: null,
             arbitrageCycle: null,
-            showArbitrageCycle: false,
             balance: null,
             balanceUnit: null,
             expectedProfit: null,
             amountIn: 0,
-            profit: null,
-            executingArbitrage: false,
-            gasCost: null,
-            actualProfit: null,
-            transactions: []
+            arbitrageAction: null,
         };
     }
 
@@ -50,9 +45,19 @@ class App extends React.Component {
 
     findArbitrageCycle() {
         let url = Settings.API_URL + '/findArbitrageCycle';
+        this.setState({
+            arbitrageCycle: {
+                fetching: true
+            }
+        });
         axios.get(url)
             .then(result => {
-                this.setState({showArbitrageCycle: true});
+                this.setState({
+                    arbitrageCycle: {
+                        cycle: result.data.cycle,
+                        fetching: false
+                    }
+                });
                 if (result.data.cycle) {
                     let token = this.state.config.tokens[result.data.cycle[0]];
                     this.getTokenBalance(token.address).then(val => {
@@ -60,10 +65,6 @@ class App extends React.Component {
                             balance: val,
                             balanceUnit: token.unit
                         });
-                    });
-
-                    this.setState({
-                        arbitrageCycle: result.data.cycle
                     });
                 }
             })
@@ -73,54 +74,81 @@ class App extends React.Component {
     }
 
     calculateExpectedProfit() {
+        this.setState({
+            expectedProfit: {
+                fetching: true
+            }
+        });
         let url = Settings.API_URL + '/calculateExpectedProfit';
         axios.get(url, {
             params: {
                 amount: this.state.amountIn,
-                cycle: this.state.arbitrageCycle
+                cycle: this.state.arbitrageCycle.cycle
             }
         })
             .then(result => {
                 this.setState({
-                    expectedProfit: result.data
+                    expectedProfit: {
+                        result: result.data,
+                        fetching: false
+                    }
                 });
             })
             .catch(error => {
-                console.error(error);
+                this.setState({
+                    expectedProfit: {
+                        fetching: false,
+                        error: error.response.data
+                    }
+                });
             });
     }
 
     performArbitrage() {
         this.setState({
-            executingArbitrage: true,
-            profit: null
+            arbitrageAction: {
+                fetching: true
+            }
         });
         let url = Settings.API_URL + '/performArbitrage';
         axios.post(url, {
             amount: this.state.amountIn,
-            cycle: this.state.arbitrageCycle
+            cycle: this.state.arbitrageCycle.cycle
         })
             .then(result => {
                 let actualProfit = result.data.profit - result.data.gasCostInToken;
                 this.setState({
-                    profit: result.data.profit,
-                    gasCost: result.data.gasCost,
-                    actualProfit: actualProfit,
-                    transactions: result.data.transactions
+                    arbitrageAction: {
+                        fetching: false,
+                        result: {
+                            profit: result.data.profit,
+                            gasCost: result.data.gasCost,
+                            actualProfit: actualProfit,
+                            transactions: result.data.transactions
+                        }
+                    }
                 });
             })
             .catch(error => {
-                console.error(error);
-            })
-            .finally(() => {
                 this.setState({
-                    executingArbitrage: false
+                    arbitrageAction: {
+                        fetching: false,
+                        error: error.response.data
+                    }
                 });
             });
     }
 
     handleAmountChange(e) {
         this.setState({amountIn: parseInt(e.target.value)});
+    }
+
+    isExecutingArbitrage() {
+        return this.state.arbitrageAction && this.state.arbitrageAction.fetching;
+    }
+
+    isExecutingExpectedProfit() {
+        return this.state.expectedProfit && this.state.expectedProfit.fetching;
     }
 
     render() {
@@ -134,14 +162,14 @@ class App extends React.Component {
                 </li>
             );
 
-            if (this.state.arbitrageCycle) {
-                cycle = this.state.arbitrageCycle.map(c => this.state.config.tokens[c].unit).join('-->');
+            if (this.state.arbitrageCycle && this.state.arbitrageCycle.cycle) {
+                cycle = this.state.arbitrageCycle.cycle.map(c => this.state.config.tokens[c].unit).join('-->');
             }
         }
 
         let transLi = [];
-        if (this.state.transactions) {
-            transLi = this.state.transactions.map((hash, i) =>
+        if (this.state.arbitrageAction && this.state.arbitrageAction.result && this.state.arbitrageAction.result.transactions) {
+            transLi = this.state.arbitrageAction.result.transactions.map((hash, i) =>
                 <li key={i}>
                     <a href={"https://rinkeby.etherscan.io/tx/" + hash} target="_blank"
                        rel="noreferrer">{hash}</a>
@@ -160,10 +188,20 @@ class App extends React.Component {
                     </div>
                     <ExchangeRatesTable config={this.state.config}/>
                 </div>
-                <button onClick={() => this.findArbitrageCycle()} disabled={this.state.executingArbitrage}>Find
+                <button onClick={() => this.findArbitrageCycle()}
+                        disabled={this.isExecutingArbitrage() || (this.state.arbitrageCycle && this.state.arbitrageCycle.fetching)}>Find
                     Arbitrage Cycle
                 </button>
-                {this.state.showArbitrageCycle &&
+                <div>
+                    {this.state.arbitrageCycle && this.state.arbitrageCycle.fetching &&
+                    <img className="loading-icon" src={process.env.PUBLIC_URL + "/loading-icon.gif"}
+                         alt="loading icon"/>
+                    }
+                    {this.state.arbitrageCycle && !this.state.arbitrageCycle.fetching && !this.state.arbitrageCycle.cycle &&
+                    <span>Did not find cycle</span>
+                    }
+                </div>
+                {this.state.arbitrageCycle && this.state.arbitrageCycle.cycle &&
                 <div id="arbitrage-init">
                     <div id="cycle-init">
                         <b>Cycle:</b>
@@ -180,38 +218,58 @@ class App extends React.Component {
                             <div id="amount-init">
                                 <input type="number" min="0" max={this.state.balance} value={this.state.amountIn}
                                        onChange={this.handleAmountChange.bind(this)}
-                                       disabled={this.state.executingArbitrage}/>
+                                       disabled={this.isExecutingArbitrage() || this.isExecutingExpectedProfit()}/>
                                 <button onClick={() => this.calculateExpectedProfit()}
-                                        disabled={this.state.executingArbitrage}>Calculate Expected Profit
+                                        disabled={this.isExecutingArbitrage() || this.isExecutingExpectedProfit()}>Calculate
+                                    Expected Profit
                                 </button>
-                                {this.state.expectedProfit !== null && <div>
+                                {this.isExecutingExpectedProfit() &&
+                                <div>
+                                    <img className="loading-icon" src={process.env.PUBLIC_URL + "/loading-icon.gif"}
+                                         alt="loading icon"/>
+                                </div>
+                                }
+                                {this.state.expectedProfit && this.state.expectedProfit.error &&
+                                <div className="error">
+                                    {this.state.expectedProfit.error}
+                                </div>
+                                }
+                                {this.state.expectedProfit && this.state.expectedProfit.result && <div>
                                     <b>Expected
-                                        profit:</b> {this.state.expectedProfit.profit} {this.state.balanceUnit} <br/>
-                                    <b>Estimated gas price:</b> {this.state.expectedProfit.estimatedGasPrice} Ether <br/>
+                                        profit:</b> {this.state.expectedProfit.result.profit} {this.state.balanceUnit}
+                                    <br/>
+                                    <b>Estimated gas
+                                        price:</b> {this.state.expectedProfit.result.estimatedGasPrice} Ether <br/>
                                     <b>Expected net
-                                        profit:</b> {this.state.expectedProfit.netProfit} {this.state.balanceUnit}
+                                        profit:</b> {this.state.expectedProfit.result.netProfit} {this.state.balanceUnit}
                                 </div>}
                             </div>
                             <button onClick={() => this.performArbitrage()}
-                                    disabled={this.state.executingArbitrage}>Perform Arbitrage
+                                    disabled={this.isExecutingArbitrage()}>Perform Arbitrage
                             </button>
-                            {this.state.executingArbitrage && <div>
+                            {this.isExecutingArbitrage() && <div>
                                 <img className="loading-icon" src={process.env.PUBLIC_URL + "/loading-icon.gif"}
                                      alt="loading icon"/>
                             </div>}
-                            {this.state.profit !== null && <div>
+                            {this.state.arbitrageAction && this.state.arbitrageAction.result &&
+                            <div>
                                 Arbitrage performed successfully!
                                 <div id="arbitrage-result">
-                                    <b>Profit:</b> {this.state.profit} {this.state.balanceUnit}<br/>
-                                    <b>Gas cost:</b> {this.state.gasCost} Ether<br/>
+                                    <b>Profit:</b> {this.state.arbitrageAction.result.profit} {this.state.balanceUnit}<br/>
+                                    <b>Gas cost:</b> {this.state.arbitrageAction.result.gasCost} Ether<br/>
                                     <b>Estimated net profit (after
-                                        gas):</b> {this.state.actualProfit} {this.state.balanceUnit} (={this.fromWei(this.state.actualProfit)}x10<sup>{this.WEI_DECIMALS}</sup>)<br/>
+                                        gas):</b> {this.state.arbitrageAction.result.actualProfit} {this.state.balanceUnit} (={this.fromWei(this.state.arbitrageAction.result.actualProfit)}x10<sup>{this.WEI_DECIMALS}</sup>)<br/>
                                     <b>Transactions:</b>
                                     <ul>
                                         {transLi}
                                     </ul>
                                 </div>
                             </div>}
+                            {this.state.arbitrageAction && this.state.arbitrageAction.error &&
+                            <div className="error">
+                                {this.state.arbitrageAction.error}
+                            </div>
+                            }
                         </div>
                     </div>
                     }

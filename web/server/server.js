@@ -24,9 +24,13 @@ app.get('/api/calculateExchangeRatesMat', async (req, res) => {
 });
 
 app.get('/api/findArbitrageCycle', async (req, res) => {
-    let cycles = await findArbitrage.getExchangePath(conf.tokens());
-    let cycle = cycles.length > 0 ? cycles[0] : null;
-    res.json({cycle: cycle});
+    try {
+        let cycles = await findArbitrage.getExchangePath(conf.tokens());
+        let cycle = cycles.length > 0 ? cycles[0] : null;
+        res.json({cycle: cycle});
+    } catch (err) {
+        returnError(res, err.message);
+    }
 });
 
 app.get('/api/getBalance', async (req, res) => {
@@ -36,18 +40,29 @@ app.get('/api/getBalance', async (req, res) => {
     res.json({balance: balance});
 });
 
-app.get('/api/calculateExpectedProfit', async (req, res) => {
-    let amountIn = parseInt(req.query.amount);
-    let cycle = req.query.cycle.map(i => parseInt(i));
-    let profit = await tokenExchange.calculateExpectedProfit(cycle, amountIn);
-    res.json(profit);
+app.get('/api/calculateExpectedProfit', async (req, res, next) => {
+    try {
+        let amountIn = parseInt(req.query.amount);
+        if (amountIn <= 0) {
+            returnError(res, 'Amount has to be positive');
+        }
+        let cycle = req.query.cycle.map(i => parseInt(i));
+        let profit = await tokenExchange.calculateExpectedProfit(cycle, amountIn);
+        res.json(profit);
+    } catch (err) {
+        returnError(res, err.message);
+    }
 });
 
 app.post('/api/performArbitrage', async (req, res) => {
-    let amountIn = req.body.amount;
-    let cycle = req.body.cycle;
-    let result = await tokenExchange.performArbitrage(amountIn, cycle);
-    res.json(result);
+    try {
+        let amountIn = req.body.amount;
+        let cycle = req.body.cycle;
+        let result = await tokenExchange.performArbitrage(amountIn, cycle);
+        res.json(result);
+    } catch (err) {
+        returnError(res, err.message);
+    }
 });
 
 function exportConfigToClient() {
@@ -57,4 +72,8 @@ function exportConfigToClient() {
         uniswapRouterAddr: conf.uniswapRouter()._address,
         autoCoinTraderAddr: conf.autoCoinTrader()._address
     };
+}
+
+function returnError(res, msg) {
+    res.status(500).send(msg);
 }

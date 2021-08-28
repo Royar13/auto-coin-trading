@@ -99,3 +99,7 @@ ExchangeRatesTable {
     border: 1px solid #bbbbbb;
     margin-top: 10px;
 }
+
+.error {
+    color: red;
+}
