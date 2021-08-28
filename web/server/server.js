@@ -61,6 +61,9 @@ app.get('/api/calculateExpectedProfit', async (req, res, next) => {
 app.post('/api/performArbitrage', async (req, res) => {
     try {
         let amountIn = req.body.amount;
+        if (amountIn <= 0) {
+            returnError(res, 'Amount has to be positive');
+        }
         let cycle = req.body.cycle;
         let result = await tokenExchange.performArbitrage(amountIn, cycle);
         res.json(result);
