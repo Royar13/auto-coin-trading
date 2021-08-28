@@ -49,6 +49,7 @@ app.get('/api/calculateExpectedProfit', async (req, res, next) => {
         let amountIn = parseInt(req.query.amount);
         if (amountIn <= 0) {
             returnError(res, 'Amount has to be positive');
+            return;
         }
         let cycle = req.query.cycle.map(i => parseInt(i));
         let profit = await tokenExchange.calculateExpectedProfit(cycle, amountIn);
@@ -63,6 +64,7 @@ app.post('/api/performArbitrage', async (req, res) => {
         let amountIn = req.body.amount;
         if (amountIn <= 0) {
             returnError(res, 'Amount has to be positive');
+            return;
         }
         let cycle = req.body.cycle;
         let result = await tokenExchange.performArbitrage(amountIn, cycle);
