@@ -19,8 +19,12 @@ app.get('/api/getConfig', (req, res) => {
 });
 
 app.get('/api/calculateExchangeRatesMat', async (req, res) => {
-    let exchangeRatesMat = await findArbitrage.createExchangeRatesMat(conf.tokens());
-    res.json({exchangeRatesMat: exchangeRatesMat});
+    try {
+        let exchangeRatesMat = await findArbitrage.createExchangeRatesMat(conf.tokens());
+        res.json({exchangeRatesMat: exchangeRatesMat});
+    } catch (err) {
+        returnError(res, err.message);
+    }
 });
 
 app.get('/api/findArbitrageCycle', async (req, res) => {

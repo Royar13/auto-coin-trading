@@ -40,18 +40,27 @@ class ExchangeRatesTable extends React.Component {
         }
 
         return (
-            <table id="exchange-rates">
-                <caption>Exchange Rates (Uniswap<img src={process.env.PUBLIC_URL + "/uniswap-uni-logo-small.png"}
-                                                     alt="Uniswap logo"/>):
-                </caption>
-                <thead>
-                {headerRow}
-                </thead>
-                <tbody>
-                {tr}
-                </tbody>
-            </table>
-        );
+            <div>
+                <table id="exchange-rates">
+                    <caption>Exchange Rates (Uniswap<img src={process.env.PUBLIC_URL + "/uniswap-uni-logo-small.png"}
+                                                         alt="Uniswap logo"/>):
+                    </caption>
+                    <thead>
+                    {headerRow}
+                    </thead>
+                    <tbody>
+                    {tr}
+                    </tbody>
+                </table>
+                {
+                    this.state.error &&
+                    <div className="error">
+                        {this.state.error}
+                    </div>
+                }
+            </div>
+        )
+            ;
     }
 
     componentDidMount() {
@@ -63,7 +72,9 @@ class ExchangeRatesTable extends React.Component {
                 });
             })
             .catch(error => {
-                console.error(error);
+                this.setState({
+                    error: error.response.data
+                });
             });
     }
 }

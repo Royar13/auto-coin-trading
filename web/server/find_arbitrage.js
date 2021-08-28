@@ -48,9 +48,14 @@ async function createExchangeRatesMat(tokens) {
 
     for (let i = 0; i < tokens.length - 1; i++) {
         for (let j = i + 1; j < tokens.length; j++) {
-            let rate = await fetchUniswapExchangeRate(tokens[i].address, tokens[j].address);
-            exchangeRatesMat[i][j] = rate;
-            exchangeRatesMat[j][i] = 1 / rate;
+            try {
+                let rate = await fetchUniswapExchangeRate(tokens[i].address, tokens[j].address);
+                exchangeRatesMat[i][j] = rate;
+                exchangeRatesMat[j][i] = 1 / rate;
+            } catch (err) {
+                exchangeRatesMat = [];
+                throw new Error('Cannot find exchange rate between tokens ' + tokens[i].unit + ' and ' + tokens[j].unit);
+            }
         }
     }
 
