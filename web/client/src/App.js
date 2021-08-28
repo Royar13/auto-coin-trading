@@ -48,7 +48,9 @@ class App extends React.Component {
         this.setState({
             arbitrageCycle: {
                 fetching: true
-            }
+            },
+            expectedProfit: null,
+            arbitrageAction: null
         });
         axios.get(url)
             .then(result => {
