@@ -28,7 +28,7 @@ To deploy them, run: `npx truffle migrate --network rinkeby` (the network settin
 
 This command deploys 2 token contracts and the AutoCoinTrader contract.
 
-Update `AutoCoinTraderAddr` field in `configuration.json` to the deployed contract's address, and optionally add the deployed tokens to the `Tokens` field in the following format (WETH has to be the first token):
+Update the `AutoCoinTraderAddr` field in `configuration.json` to the deployed contract's address, and optionally add the deployed tokens to the `Tokens` field in the following format (WETH has to be the first token):
 ```json
 [
     {
@@ -38,5 +38,10 @@ Update `AutoCoinTraderAddr` field in `configuration.json` to the deployed contra
     }
 ]
 ```
+## Running the project
+### Server
+Run the command `node web/server/server.js` from the root of the project.
+### Client
+Run the command `npm start` from the `web/client` directory.
 
-
+The web application will open on `localhost:3000`.
