@@ -10,7 +10,7 @@ The repo contains 2 separate npm projects: one in the root of the project and on
 Run `npm install` in both directories.
 ## Configuration
 Before running the project, some configurations need to be changed:
-* In `configuration.json`, set `DefaultAccountAddr` to the address of your account.
+* In `web/server/configuration.json`, set `DefaultAccountAddr` to the address of your account.
 
   Set `UniswapRouterAddr` to the contract's address in your Ethereum network of choice.
 * Create a `.env` file at the root of the project, containing the following fields:
