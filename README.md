@@ -1,4 +1,4 @@
-# Aritrage-Crypto-Trader
+# Arbitrage-Crypto-Trader
 ## Requirements
 * An Ethereum account with enough Ether to pay for gas.
 * An **Infura** project url for connecting to Ethereum networks.
